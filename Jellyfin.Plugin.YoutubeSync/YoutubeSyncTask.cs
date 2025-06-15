@@ -21,7 +21,6 @@ public class YoutubeSyncTask : IScheduledTask
 {
     private readonly ILogger<YoutubeSyncTask> _logger;
 
-
     public YoutubeSyncTask(ILogger<YoutubeSyncTask> logger)
     {
         _logger = logger;
@@ -107,13 +106,13 @@ public class YoutubeSyncTask : IScheduledTask
                     string videoUrl = entry.Element(ns + "link")?.Attribute("href")?.Value;
 
                     _logger.LogInformation("Found video: {Title} - {Url}", title, videoUrl);
-
+                    _logger.LogInformation("Check if video {Title} exists in {Url}", title, downloadFolder);
                     // Check if a file with this title already exists in the download folder
-                    var normalizedTitle = title.Normalize(NormalizationForm.FormC);
-                    bool existing = Directory.EnumerateFiles(downloadFolder, "*.mp4")
-                        .Select(f => Path.GetFileNameWithoutExtension(f).Normalize(NormalizationForm.FormC))
-                        .Any(f => string.Equals(f, normalizedTitle, StringComparison.OrdinalIgnoreCase));
+                    string normalizedTitle = NormalizeYtDlpTitle(title);
 
+                    bool existing = Directory.EnumerateFiles(downloadFolder, "*.mp4")
+                                            .Any(file => Path.GetFileNameWithoutExtension(file)
+                                            .Equals(normalizedTitle, StringComparison.OrdinalIgnoreCase));
                     if (existing)
                     {
                         _logger.LogInformation("Skipping download, file already exists: {Title}", title);
@@ -132,8 +131,8 @@ public class YoutubeSyncTask : IScheduledTask
                     };
 
                     using var process = new Process { StartInfo = startInfo };
-                    process.OutputDataReceived += (s, e) => { if (e.Data != null) _logger.LogInformation("[yt-dlp] {Line}", e.Data); };
-                    process.ErrorDataReceived += (s, e) => { if (e.Data != null) _logger.LogWarning("[yt-dlp:stderr] {Line}", e.Data); };
+                    process.OutputDataReceived += (s, e) => { if (e.Data != null) _logger.LogDebug("[yt-dlp] {Line}", e.Data); };
+                    process.ErrorDataReceived += (s, e) => { if (e.Data != null) _logger.LogInformation("[yt-dlp:stderr] {Line}", e.Data); };
 
                     process.Start();
                     process.BeginOutputReadLine();
@@ -253,5 +252,20 @@ public class YoutubeSyncTask : IScheduledTask
                 IntervalTicks = TimeSpan.FromHours(1).Ticks
             }
         };
+    }
+
+    private string NormalizeYtDlpTitle(string input)
+    {
+        return input
+            .Replace('|', '｜')// Fullwidth vertical bar
+            .Replace(':', '：')// Colon to dash ：
+            .Replace('/', '_')// Slashes to underscores
+            .Replace('\\', '_')
+            .Replace('"', '“')// Quotes to single quote“
+            .Replace('<', '_')
+            .Replace('>', '_')
+            .Replace('*', '_')
+            .Replace('?', '？')
+            .Trim();
     }
 }
