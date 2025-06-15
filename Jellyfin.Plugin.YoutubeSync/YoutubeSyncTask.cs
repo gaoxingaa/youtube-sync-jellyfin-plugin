@@ -121,6 +121,18 @@ public class YoutubeSyncTask : IScheduledTask
                     string videoUrl = entry.Element(ns + "link")?.Attribute("href")?.Value;
 
                     _logger.LogInformation("Found video: {Title} - {Url}", title, videoUrl);
+
+                    // Check if a file with this title already exists in the download folder
+                    bool existing = VideoExtensions
+                        .Select(ext => Path.Combine(downloadFolder, $"{title}{ext}"))
+                        .Any(File.Exists);
+
+                    if (existing)
+                    {
+                        _logger.LogInformation("Skipping download, file already exists: {Title}", title);
+                        continue;
+                    }
+
                     var startInfo = new ProcessStartInfo
                     {
                         FileName = "yt-dlp",  // because it's already in PATH
