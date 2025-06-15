@@ -119,6 +119,8 @@ public class YoutubeSyncTask : IScheduledTask
                         continue;
                     }
 
+                    _logger.LogInformation("Downloading file: {Title} ............", title);
+
                     var startInfo = new ProcessStartInfo
                     {
                         FileName = "yt-dlp",  // because it's already in PATH
