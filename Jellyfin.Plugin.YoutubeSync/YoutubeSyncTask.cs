@@ -21,6 +21,16 @@ public class YoutubeSyncTask : IScheduledTask
 {
     private readonly ILogger<YoutubeSyncTask> _logger;
 
+    private static readonly string[] VideoExtensions =
+    [
+        ".mp4",
+        ".mkv",
+        ".webm",
+        ".flv",
+        ".avi",
+        ".mov"
+    ];
+
     public YoutubeSyncTask(ILogger<YoutubeSyncTask> logger)
     {
         _logger = logger;
@@ -141,6 +151,38 @@ public class YoutubeSyncTask : IScheduledTask
                     }
                 }
 
+                if (autoDeletePlayed)
+                {
+                    var directoryInfo = new DirectoryInfo(downloadFolder);
+                    var videoFiles = directoryInfo.EnumerateFiles()
+                        .Where(f => VideoExtensions.Contains(f.Extension, StringComparer.OrdinalIgnoreCase))
+                        .OrderBy(f => f.CreationTimeUtc)
+                        .ToList();
+
+                    var remaining = videoFiles.Count;
+                    foreach (var file in videoFiles)
+                    {
+                        if (remaining <= episodes)
+                        {
+                            break;
+                        }
+
+                        if (IsWatched(file))
+                        {
+                            try
+                            {
+                                _logger.LogInformation("Removing watched episode {File}", file.Name);
+                                file.Delete();
+                                remaining--;
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogWarning(ex, "Failed to delete file {File}", file.FullName);
+                            }
+                        }
+                    }
+                }
+
                 _logger.LogInformation("YouTube Sync Task completed successfully.");
                 progress.Report(100);
             }
@@ -149,6 +191,35 @@ public class YoutubeSyncTask : IScheduledTask
                 _logger.LogError(ex, "YouTube Sync Task failed.");
                 throw;
             }
+        }
+    }
+
+    /// <summary>
+    /// Determines whether the episode has been watched.
+    /// </summary>
+    /// <param name="file">The video file to check.</param>
+    /// <returns><c>true</c> if the accompanying .nfo file contains &lt;watched&gt;true&lt;/watched&gt;; otherwise, <c>false</c>.</returns>
+    private static bool IsWatched(FileInfo file)
+    {
+        // Jellyfin writes a .nfo file next to each video. The watched state is
+        // stored in a &lt;watched&gt; element under the &lt;episodedetails&gt; root.
+        var nfoPath = Path.ChangeExtension(file.FullName, ".nfo");
+
+        if (!File.Exists(nfoPath))
+        {
+            return false;
+        }
+
+        try
+        {
+            var doc = XDocument.Load(nfoPath);
+            var watchedValue = doc.Root?.Element("watched")?.Value;
+            return string.Equals(watchedValue, "true", StringComparison.OrdinalIgnoreCase);
+        }
+        catch
+        {
+            // If the file cannot be parsed, assume it is not watched.
+            return false;
         }
     }
 
