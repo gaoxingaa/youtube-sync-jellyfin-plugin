@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>YoutubeSync</title>
+</head>
+<body>
+    <div id="YoutubeSyncConfigPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button,emby-select,emby-checkbox">
+        <div data-role="content">
+            <div class="content-primary">
+                <form id="YoutubeSyncConfigForm">
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="VideoLocation">Video Location</label>
+                        <input id="VideoLocation" name="VideoLocation" type="text" is="emby-input" />
+                        <div class="fieldDescription">Input the Video Location, for example, c:\video</div>
+                    </div>
+
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="YoutubeUrl">Youtube URL</label>
+                        <input id="YoutubeUrl" name="YoutubeUrl" type="text" is="emby-input" />
+                        <div class="fieldDescription">Input the youtube channel Ids, split in comma, for example: UCwWhs_6x42TyRM4Wstoq8HA,UCrNnk0wFBnCS1awGjq_ijGQ</div>
+                    </div>
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="Episodes">Episodes</label>
+                        <input id="Episodes" name="Episodes" type="number" is="emby-input" min="0" />
+                        <div class="fieldDescription">How many episodes you want to keep</div>
+                    </div>
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label class="emby-checkbox-label">
+                            <input id="AutoDeletePlayed" name="AutoDeletePlayed" type="checkbox" is="emby-checkbox" />
+                            <span>Auto Delete Played Episodes</span>
+                        </label>
+                    </div>
+                    <div>
+                        <button is="emby-button" type="submit" class="raised button-submit block emby-button">
+                            <span>Save</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <script type="text/javascript">
+            var YoutubeSyncConfig = {
+                pluginUniqueId: '17438c58-4f70-4628-8759-8fc3fbcf0552'
+            };
+
+            document.querySelector('#YoutubeSyncConfigPage')
+                .addEventListener('pageshow', function() {
+                    Dashboard.showLoadingMsg();
+                    ApiClient.getPluginConfiguration(YoutubeSyncConfig.pluginUniqueId).then(function (config) {
+                        document.querySelector('#VideoLocation').value = config.VideoLocation;
+                        document.querySelector('#YoutubeUrl').value = config.YoutubeUrl;
+                        document.querySelector('#Episodes').value = config.Episodes;
+                        document.querySelector('#AutoDeletePlayed').checked = config.AutoDeletePlayed;
+                        Dashboard.hideLoadingMsg();
+                    });
+                });
+
+            document.querySelector('#YoutubeSyncConfigForm')
+                .addEventListener('submit', function(e) {
+                Dashboard.showLoadingMsg();
+                ApiClient.getPluginConfiguration(YoutubeSyncConfig.pluginUniqueId).then(function (config) {
+                    config.VideoLocation = document.querySelector('#VideoLocation').value;
+                    config.YoutubeUrl = document.querySelector('#YoutubeUrl').value;
+                    config.Episodes = document.querySelector('#Episodes').value;
+                    config.AutoDeletePlayed = document.querySelector('#AutoDeletePlayed').checked;
+                    ApiClient.updatePluginConfiguration(YoutubeSyncConfig.pluginUniqueId, config).then(function (result) {
+                        Dashboard.processPluginConfigurationUpdateResult(result);
+                    });
+                });
+
+                e.preventDefault();
+                return false;
+            });
+        </script>
+    </div>
+</body>
+</html>

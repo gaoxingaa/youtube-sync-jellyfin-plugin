@@ -192,3 +192,29 @@ csharp_space_between_method_call_empty_parameter_list_parentheses = false
 # Wrapping preferences
 csharp_preserve_single_line_statements = true
 csharp_preserve_single_line_blocks = true
+
+# Disable StyleCop rule for missing XML comments
+[*.cs]
+dotnet_diagnostic.SA0001.severity = none
+dotnet_diagnostic.SA1503.severity = none
+
+dotnet_diagnostic.CS0019.severity = none
+
+dotnet_diagnostic.CS1591.severity = none
+dotnet_diagnostic.CS8600.severity = none
+dotnet_diagnostic.CS8602.severity = none
+dotnet_diagnostic.CS8618.severity = none
+
+
+# Disable StyleCop rule about ordering
+dotnet_diagnostic.SA1201.severity = none
+
+# Allow lowercase placeholders in logging
+dotnet_diagnostic.CA1002.severity = none
+dotnet_diagnostic.CA2227.severity = none
+
+dotnet_diagnostic.CA1727.severity = none
+dotnet_diagnostic.CA2016.severity = none
+dotnet_diagnostic.CA2007.severity = none
+dotnet_diagnostic.CA2007.severity = none
+
