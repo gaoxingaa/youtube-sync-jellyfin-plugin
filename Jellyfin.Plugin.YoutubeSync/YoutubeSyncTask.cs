@@ -78,9 +78,7 @@ public class YoutubeSyncTask : IScheduledTask
         for (int i = 0; i < channelCount; i++)
         {
             var channelId = channels[i];
-            _logger.LogInformation("Syncing from {YoutubeUrl}, Episodes: {Episodes}, AutoDelete: {AutoDelete}", channelId, episodes, autoDeletePlayed);
-
-            _logger.LogInformation("Saving to: {VideoLocation}, Episodes: {Episodes}, AutoDelete: {AutoDeletePlayed}", videoLocation, episodes, autoDeletePlayed);
+            _logger.LogInformation("Syncing to: {VideoLocation}, for ChannelId: {YoutubeUrl}, Episodes: {Episodes}, AutoDelete: {AutoDeletePlayed}", videoLocation, channelId, episodes, autoDeletePlayed);
 
             try
             {
@@ -94,10 +92,8 @@ public class YoutubeSyncTask : IScheduledTask
                 var doc = XDocument.Parse(xml);
                 var ns = doc.Root.GetDefaultNamespace();
                 string channelName = doc.Root.Element(ns + "title").Value;
-
-
+                _logger.LogInformation("Get channel name: {ChannelName}", channelName);
                 // Create folder for the title
-
                 string downloadFolder = Path.Combine(config.VideoLocation, $"{channelName}");
 
                 if (!Directory.Exists(downloadFolder))
@@ -116,8 +112,6 @@ public class YoutubeSyncTask : IScheduledTask
 
                 foreach (var entry in entries)
                 {
-                    _logger.LogInformation(".........entry.........");
-
                     string title = entry.Element(ns + "title")?.Value;
                     string videoUrl = entry.Element(ns + "link")?.Attribute("href")?.Value;
 
@@ -166,6 +160,7 @@ public class YoutubeSyncTask : IScheduledTask
 
                 if (autoDeletePlayed)
                 {
+                    _logger.LogInformation("Removing watched episode");
                     var directoryInfo = new DirectoryInfo(downloadFolder);
                     var videoFiles = directoryInfo.EnumerateFiles()
                         .Where(f => VideoExtensions.Contains(f.Extension, StringComparer.OrdinalIgnoreCase))
@@ -210,8 +205,6 @@ public class YoutubeSyncTask : IScheduledTask
                         }
                     }
                 }
-
-                _logger.LogInformation("YouTube Sync Task completed successfully.");
             }
             catch (Exception ex)
             {
@@ -221,6 +214,9 @@ public class YoutubeSyncTask : IScheduledTask
 
             progress.Report(100.0 * (i + 1) / channelCount);
         }
+
+        progress.Report(100.0);
+        _logger.LogInformation("YouTube Sync Task completed successfully.");
     }
 
     /// <summary>
