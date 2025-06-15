@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Text.RegularExpressions;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
@@ -21,15 +21,6 @@ public class YoutubeSyncTask : IScheduledTask
 {
     private readonly ILogger<YoutubeSyncTask> _logger;
 
-    private static readonly string[] VideoExtensions =
-    [
-        ".mp4",
-        ".mkv",
-        ".webm",
-        ".flv",
-        ".avi",
-        ".mov"
-    ];
 
     public YoutubeSyncTask(ILogger<YoutubeSyncTask> logger)
     {
@@ -118,9 +109,10 @@ public class YoutubeSyncTask : IScheduledTask
                     _logger.LogInformation("Found video: {Title} - {Url}", title, videoUrl);
 
                     // Check if a file with this title already exists in the download folder
-                    bool existing = VideoExtensions
-                        .Select(ext => Path.Combine(downloadFolder, $"{title}{ext}"))
-                        .Any(File.Exists);
+                    var normalizedTitle = title.Normalize(NormalizationForm.FormC);
+                    bool existing = Directory.EnumerateFiles(downloadFolder, "*.mp4")
+                        .Select(f => Path.GetFileNameWithoutExtension(f).Normalize(NormalizationForm.FormC))
+                        .Any(f => string.Equals(f, normalizedTitle, StringComparison.OrdinalIgnoreCase));
 
                     if (existing)
                     {
@@ -162,8 +154,7 @@ public class YoutubeSyncTask : IScheduledTask
                 {
                     _logger.LogInformation("Removing watched episode");
                     var directoryInfo = new DirectoryInfo(downloadFolder);
-                    var videoFiles = directoryInfo.EnumerateFiles()
-                        .Where(f => VideoExtensions.Contains(f.Extension, StringComparer.OrdinalIgnoreCase))
+                    var videoFiles = directoryInfo.EnumerateFiles("*.mp4")
                         .OrderBy(f => f.CreationTimeUtc)
                         .ToList();
 
