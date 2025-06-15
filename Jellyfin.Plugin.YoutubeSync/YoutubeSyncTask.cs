@@ -184,7 +184,22 @@ public class YoutubeSyncTask : IScheduledTask
                             try
                             {
                                 _logger.LogInformation("Removing watched episode {File}", file.Name);
-                                file.Delete();
+
+                                var baseName = Path.GetFileNameWithoutExtension(file.Name);
+                                var dir = file.DirectoryName ?? string.Empty;
+
+                                foreach (var associatedPath in Directory.EnumerateFiles(dir, baseName + ".*"))
+                                {
+                                    try
+                                    {
+                                        File.Delete(associatedPath);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        _logger.LogWarning(ex, "Failed to delete associated file {File}", associatedPath);
+                                    }
+                                }
+
                                 remaining--;
                             }
                             catch (Exception ex)
