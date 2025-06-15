@@ -74,8 +74,10 @@ public class YoutubeSyncTask : IScheduledTask
         bool autoDeletePlayed = config.AutoDeletePlayed;
 
         string[] channels = youtubeUrl.Split(',');
-        foreach (string channelId in channels)
+        var channelCount = channels.Length;
+        for (int i = 0; i < channelCount; i++)
         {
+            var channelId = channels[i];
             _logger.LogInformation("Syncing from {YoutubeUrl}, Episodes: {Episodes}, AutoDelete: {AutoDelete}", channelId, episodes, autoDeletePlayed);
 
             _logger.LogInformation("Saving to: {VideoLocation}, Episodes: {Episodes}, AutoDelete: {AutoDeletePlayed}", videoLocation, episodes, autoDeletePlayed);
@@ -93,7 +95,8 @@ public class YoutubeSyncTask : IScheduledTask
                 var ns = doc.Root.GetDefaultNamespace();
                 string channelName = doc.Root.Element(ns + "title").Value;
 
-                progress.Report(10);
+                // Report progress based on the current channel index.
+                progress.Report(100.0 * i / channelCount);
 
                 // Create folder for the title
 
@@ -211,7 +214,6 @@ public class YoutubeSyncTask : IScheduledTask
                 }
 
                 _logger.LogInformation("YouTube Sync Task completed successfully.");
-                progress.Report(100);
             }
             catch (Exception ex)
             {
