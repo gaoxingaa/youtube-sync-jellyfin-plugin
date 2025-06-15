@@ -95,8 +95,6 @@ public class YoutubeSyncTask : IScheduledTask
                 var ns = doc.Root.GetDefaultNamespace();
                 string channelName = doc.Root.Element(ns + "title").Value;
 
-                // Report progress based on the current channel index.
-                progress.Report(100.0 * i / channelCount);
 
                 // Create folder for the title
 
@@ -220,6 +218,8 @@ public class YoutubeSyncTask : IScheduledTask
                 _logger.LogError(ex, "YouTube Sync Task failed.");
                 throw;
             }
+
+            progress.Report(100.0 * (i + 1) / channelCount);
         }
     }
 
