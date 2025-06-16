@@ -63,7 +63,10 @@ public class YoutubeSyncTask : IScheduledTask
         int episodes = config.Episodes;
         bool autoDeletePlayed = config.AutoDeletePlayed;
 
-        string[] channels = youtubeUrl.Split(',');
+        string[] channels = youtubeUrl
+            .Split(',', StringSplitOptions.RemoveEmptyEntries)
+            .Select(c => c.Trim())
+            .ToArray();
         var channelCount = channels.Length;
         for (int i = 0; i < channelCount; i++)
         {
@@ -84,7 +87,8 @@ public class YoutubeSyncTask : IScheduledTask
                 string channelName = doc.Root.Element(ns + "title").Value;
                 _logger.LogInformation("Get channel name: {ChannelName}", channelName);
                 // Create folder for the title
-                string downloadFolder = Path.Combine(config.VideoLocation, $"{channelName}");
+                var safeChannelName = NormalizeYtDlpTitle(channelName);
+                string downloadFolder = Path.Combine(config.VideoLocation, safeChannelName);
 
                 if (!Directory.Exists(downloadFolder))
                 {
