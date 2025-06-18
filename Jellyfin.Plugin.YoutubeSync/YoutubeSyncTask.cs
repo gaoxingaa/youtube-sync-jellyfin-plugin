@@ -59,11 +59,11 @@ public class YoutubeSyncTask : IScheduledTask
 
         string videoLocation = config.VideoLocation;
 
-        string youtubeUrl = config.YoutubeUrl;
+        string channelIds = config.ChannelIds;
         int episodes = config.Episodes;
         bool autoDeletePlayed = config.AutoDeletePlayed;
 
-        string[] channels = youtubeUrl
+        string[] channels = channelIds
             .Split(',', StringSplitOptions.RemoveEmptyEntries)
             .Select(c => c.Trim())
             .ToArray();
@@ -71,7 +71,7 @@ public class YoutubeSyncTask : IScheduledTask
         for (int i = 0; i < channelCount; i++)
         {
             var channelId = channels[i];
-            _logger.LogInformation("Syncing to: {VideoLocation}, for ChannelId: {YoutubeUrl}, Episodes: {Episodes}, AutoDelete: {AutoDeletePlayed}", videoLocation, channelId, episodes, autoDeletePlayed);
+            _logger.LogInformation("Syncing to: {VideoLocation}, for ChannelId: {ChannelId}, Episodes: {Episodes}, AutoDelete: {AutoDeletePlayed}", videoLocation, channelId, episodes, autoDeletePlayed);
 
             try
             {

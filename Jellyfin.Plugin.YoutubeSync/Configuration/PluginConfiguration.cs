@@ -14,7 +14,7 @@ public class PluginConfiguration : BasePluginConfiguration
     {
         // set default options here
         VideoLocation = "c:\\video";
-        YoutubeUrl = "https://www.youtube.com/@PBSKIDS";
+        ChannelIds = string.Empty;
         Episodes = 3;
         AutoDeletePlayed = false;
     }
@@ -30,9 +30,9 @@ public class PluginConfiguration : BasePluginConfiguration
     public int Episodes { get; set; }
 
     /// <summary>
-    /// Gets or sets YoutubeUrl setting.
+    /// Gets or sets ChannelIds setting.
     /// </summary>
-    public string YoutubeUrl { get; set; }
+    public string ChannelIds { get; set; }
 
     /// <summary>
     /// Gets or sets VideoLocation setting.
